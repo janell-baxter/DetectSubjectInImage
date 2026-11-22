@@ -1,119 +1,115 @@
-// *****************************
-// Image Detection Application
-// Janell Baxter
-// 2025
-// Demo from PROG 102 Code
-// *****************************
-
-
-// =====================
-// Fake Progress Bar
-// =====================
+// ============================
+// Load the AI Model
+// ============================
 
 let model = null;
 
-async function loadModelWithProgress() {
-  const container = document.getElementById("progressContainer");
-  const bar = document.getElementById("progressBar");
-  container.style.display = "block";
-
-  //TensorFlow.js gives no real progress events
-  let progress = 0;
-  const interval = setInterval(() => {
-    progress += Math.random() * 15;
-    if (progress > 90) progress = 90;
-    bar.style.width = progress + "%";
-  }, 200);
+async function loadModel() {
+  document.getElementById("result").textContent = "Loading model...";
 
   model = await mobilenet.load();
 
-  // Finish progress bar
-  clearInterval(interval);
-  bar.style.width = "100%";
-
-  setTimeout(() => {
-    container.style.display = "none";
-  }, 400);
-
   document.getElementById("result").textContent =
-    "Model ready — drop or choose an image.";
+    "Model ready! Choose an image.";
 }
 
-window.addEventListener("DOMContentLoaded", loadModelWithProgress);
+// Load the model when the page opens
+window.addEventListener("DOMContentLoaded", loadModel);
 
-// =====================
-// Analyze Image
-// =====================
+
+// ============================
+// Analyze an Image
+// ============================
+
 async function analyzeImage() {
   const img = document.getElementById("preview");
   const result = document.getElementById("result");
 
+  // Check if the model is ready
   if (!model) {
-    result.textContent = "Model is still loading...";
+    result.textContent = "Please wait. Model is loading...";
     return;
   }
 
+  // Check if an image was selected
   if (!img.src) {
-    result.textContent = "Please load an image first.";
+    result.textContent = "Please choose an image first.";
     return;
   }
 
-  result.textContent = "Analyzing...";
+  result.textContent = "Analyzing image...";
+
+  // Ask the AI model to recognize the image
   const predictions = await model.classify(img);
 
+  // Show the result
   if (predictions.length > 0) {
-    const top = predictions[0];
+    const subject = predictions[0].className;
+    const confidence = predictions[0].probability * 100;
+
     result.textContent =
-      `Subject: ${top.className} (confidence: ${(top.probability * 100).toFixed(1)}%)`;
+      "Subject: " + subject +
+      " (Confidence: " + confidence.toFixed(1) + "%)";
   } else {
-    result.textContent = "Could not determine the subject.";
+    result.textContent = "Could not recognize the image.";
   }
 }
 
 
-// =====================
-// Load Selected Image
-// =====================
-function loadImageFromFile(file) {
+// ============================
+// Display Selected Image
+// ============================
+
+function loadImage(file) {
   const img = document.getElementById("preview");
+
+  // Display the image
   img.src = URL.createObjectURL(file);
   img.style.display = "block";
 
-  // Wait briefly for image to render before analysis
-  img.onload = () => analyzeImage();
+  // Analyze the image after it loads
+  img.onload = analyzeImage;
 }
 
 
-// =====================
-// Drag-and-Drop
-// =====================
-const dropzone = document.getElementById("dropzone");
+// ============================
+// Select an Image
+// ============================
+
 const fileInput = document.getElementById("imageInput");
 
-dropzone.addEventListener("click", () => fileInput.click());
-
-dropzone.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  dropzone.classList.add("hover");
-});
-
-dropzone.addEventListener("dragleave", () => {
-  dropzone.classList.remove("hover");
-});
-
-dropzone.addEventListener("drop", (e) => {
-  e.preventDefault();
-  dropzone.classList.remove("hover");
-
-  const file = e.dataTransfer.files[0];
-  if (file) loadImageFromFile(file);
-});
-
-
-// =====================
-// Select File
-// =====================
-fileInput.addEventListener("change", () => {
+fileInput.addEventListener("change", function() {
   const file = fileInput.files[0];
-  if (file) loadImageFromFile(file);
+
+  if (file) {
+    loadImage(file);
+  }
+});
+
+
+// ============================
+// Drag and Drop an Image
+// ============================
+
+const dropzone = document.getElementById("dropzone");
+
+// Open the file selector when clicked
+dropzone.addEventListener("click", function() {
+  fileInput.click();
+});
+
+// Allow an image to be dragged over the drop area
+dropzone.addEventListener("dragover", function(event) {
+  event.preventDefault();
+});
+
+// Load the image when it is dropped
+dropzone.addEventListener("drop", function(event) {
+  event.preventDefault();
+
+  const file = event.dataTransfer.files[0];
+
+  if (file) {
+    loadImage(file);
+  }
 });
