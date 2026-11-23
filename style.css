@@ -14,7 +14,10 @@ body {
     max-width: 90%;
     margin: auto;
 }
+p {
 
+max-width: 500px;
+}
 /* Image Application Dropzone */
 #dropzone {
     width: 400px;
