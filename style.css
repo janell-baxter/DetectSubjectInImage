@@ -6,6 +6,8 @@
 /* HTML styles */
 body {
     background: #FAF6F2;
+       display: grid;
+  place-items: center;
 }
 
 .content {
